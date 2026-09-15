@@ -36,7 +36,6 @@ static SerialHandler serial_handler{std::make_unique<BrainComm>()};
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-    // debug = true;
     // Initialize all subsystems
     for (AbstractSubsystem* subsystem : subsystems) {
         subsystem->initialize();
@@ -91,8 +90,6 @@ void autonomous() {
 
     autonomous_scheduler.initialize();
 
-    // TODO: Tell pi we have entered autonomous
-
     // Run forever
     while (true) {
         // Run the autonomous scheduler to do our routine
@@ -123,26 +120,11 @@ void autonomous() {
  */
 void opcontrol() {
     // Initialize the driver control scheduler
-    // DriverControlScheduler driver_scheduler{};
-    // driver_scheduler.initialize();
+    DriverControlScheduler driver_scheduler{};
+    driver_scheduler.initialize();
 
     while (true) {
-
-        auto data = serial_handler.get_packet_data<OpticalPacket>();
-        if (data.has_value())
-        {
-            const auto [x, y, h] = *data;
-            printf("Received packet: x=%.2f, y=%.2f, h=%.2f\n", x, y, h);
-            pros::c::screen_print_at(TEXT_LARGE,
-                0, 0, std::format("{:.2f} {:.2f} {:.2f}",
-                x, y, h).c_str()
-            );
-        }
-        else
-        {
-            printf("Bad packet received\n");
-        }
-
+        driver_scheduler.run();
 
         // Run periodic for all subsystems
         for (AbstractSubsystem* subsystem : subsystems) {
@@ -150,6 +132,6 @@ void opcontrol() {
         }
 
         // Delay the loop to prevent the CPU from being overwhelmed
-        pros::delay(1000);
+        pros::delay(5);
     }
 }

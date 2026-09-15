@@ -30,37 +30,27 @@ int32_t cutoff_power(const int32_t power, int32_t cutoff)
 void DriverControlScheduler::periodic() {
 #if THINK
     // Normal controls
-    double x = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-    double y = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
-    double r = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
-    // TODO: Test how this feels
-    // double r = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X) / 127.0 * 0.6;
 
-    int32_t fl = y + x + r;
-    int32_t fr = y - x - r;
-    int32_t bl = y - x + r;
-    int32_t br = y + x - r;
 #endif
 
 #if DO
     // Garret's controls
-    double left_x = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
-    double left_y = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-    double right_x = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-    double right_y = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
 
-    int32_t fl = left_y + left_x;
-    int32_t bl = left_y - left_x;
-    int32_t fr = right_y - left_x;
-    int32_t br = right_y + left_x;
 #endif
 
-    int32_t scaled_fl = cutoff_power(scale_power(fl, Constants::Controller::INPUT_SCALING_FACTOR), Constants::Controller::INPUT_CUTOFF_AMOUNT);
-    int32_t scaled_fr = cutoff_power(scale_power(fr, Constants::Controller::INPUT_SCALING_FACTOR), Constants::Controller::INPUT_CUTOFF_AMOUNT);
-    int32_t scaled_bl = cutoff_power(scale_power(bl, Constants::Controller::INPUT_SCALING_FACTOR), Constants::Controller::INPUT_CUTOFF_AMOUNT);
-    int32_t scaled_br = cutoff_power(scale_power(br, Constants::Controller::INPUT_SCALING_FACTOR), Constants::Controller::INPUT_CUTOFF_AMOUNT);
+    const int32_t left_power = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+    const int32_t right_power = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
 
-    drivetrain.set_drive_power(scaled_fl, scaled_fr, scaled_br, scaled_bl);
+    const int32_t left_power_scaled = scale_power(left_power, Constants::Controller::INPUT_SCALING_FACTOR);
+    const int32_t right_power_scaled = scale_power(right_power, Constants::Controller::INPUT_SCALING_FACTOR);
+
+    if (abs(left_power_scaled) > 1 || abs(right_power_scaled) > 1) {
+        drivetrain.set_drive_power(left_power_scaled, right_power_scaled);
+        drivetrain.set_braking(false);
+    } else
+    {
+        drivetrain.set_drive_power(0,0);
+    }
 
     for (auto &[button, command] : BINDS) {
         // controller state for this tick

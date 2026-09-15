@@ -27,21 +27,13 @@ Drivetrain::Drivetrain() :
     left_back1(Ports::LEFT_BACK1_MOTOR_PORT, pros::v5::MotorGears::blue, pros::v5::MotorUnits::degrees),
     left_back2(Ports::LEFT_BACK2_MOTOR_PORT, pros::v5::MotorGears::blue, pros::v5::MotorUnits::degrees),
 
-    front_left_motors({left_front1.get_port(), left_front2.get_port()},
+    left_motors({left_front1.get_port(), left_front2.get_port(), left_back1.get_port(), left_back2.get_port()},
                left_front1.get_gearing(),
                left_front1.get_encoder_units()),
 
-    front_right_motors({right_front1.get_port(), right_front2.get_port()},
+    right_motors({right_front1.get_port(), right_front2.get_port(), right_back1.get_port(), right_back2.get_port()},
                 right_front1.get_gearing(),
-                right_front1.get_encoder_units()),
-
-    back_right_motors({right_back1.get_port(), right_back2.get_port()},
-               right_back1.get_gearing(),
-               right_back1.get_encoder_units()),
-
-    back_left_motors({left_back1.get_port(), left_back2.get_port()},
-              left_back1.get_gearing(),
-              left_back1.get_encoder_units())
+                right_front1.get_encoder_units())
 
     // left_rotation_sensor(Ports::LEFT_ROTATION_SENSOR_PORT),
     // right_rotation_sensor(Ports::RIGHT_ROTATION_SENSOR_PORT),
@@ -56,10 +48,8 @@ Drivetrain::Drivetrain() :
 
 void Drivetrain::initialize() {
     // Set all positions to 0
-    front_left_motors.tare_position_all();
-    front_right_motors.tare_position_all();
-    back_right_motors.tare_position_all();
-    back_right_motors.tare_position_all();
+    left_motors.tare_position_all();
+    right_motors.tare_position_all();
 
     // TODO: Change these when odom pods are added
     // left_rotation_sensor.reset();
@@ -87,39 +77,29 @@ void Drivetrain::periodic() {
         // return because nothing after this matters if it is braking.
         return;
     } else {
-        front_left_motors.set_brake_mode_all(pros::E_MOTOR_BRAKE_COAST);
-        front_right_motors.set_brake_mode_all(pros::E_MOTOR_BRAKE_COAST);
-        back_right_motors.set_brake_mode_all(pros::E_MOTOR_BRAKE_COAST);
-        back_left_motors.set_brake_mode_all(pros::E_MOTOR_BRAKE_COAST);
+        left_motors.set_brake_mode_all(pros::E_MOTOR_BRAKE_COAST);
+        right_motors.set_brake_mode_all(pros::E_MOTOR_BRAKE_COAST);
     }
 
     switch (drive_type) {
         case Constants::DriveType::POWER: {
-            // TODO: Figure out how to reverse; is reversing even needed with an x-drive?
-            // if (reversing) {
-                // right_motors.move(direction * left_drive_power);
-                // left_motors.move(direction * right_drive_power);
-            // } else {
-                // printf("Setting power")
-                front_left_motors.move(direction * front_left_power);
-                front_right_motors.move(direction * front_right_power);
-                back_right_motors.move(direction * back_right_power);
-                back_left_motors.move(direction * back_left_power);
-            // }
-
+            if (reversing) {
+                right_motors.move(direction * left_drive_power);
+                left_motors.move(direction * right_drive_power);
+            } else {
+                left_motors.move(direction * left_drive_power);
+                right_motors.move(direction * right_drive_power);
+            }
             break;
         }
         case Constants::DriveType::VOLTAGE: {
-            // if (reversing) {
-                // right_motors.move_voltage(direction * left_drive_voltage);
-                // left_motors.move_voltage(direction * right_drive_voltage);
-            // } else {
-                front_left_motors.move_voltage(direction * front_left_voltage);
-                front_right_motors.move_voltage(direction * front_right_voltage);
-                back_right_motors.move_voltage(direction * back_right_voltage);
-                back_left_motors.move_voltage(direction * back_left_voltage);
-            // }
-
+            if (reversing) {
+                right_motors.move_voltage(direction * left_drive_voltage);
+                left_motors.move_voltage(direction * right_drive_voltage);
+            } else {
+                left_motors.move_voltage(direction * left_drive_voltage);
+                right_motors.move_voltage(direction * right_drive_voltage);
+            }
             break;
         }
     }
@@ -137,55 +117,42 @@ void Drivetrain::shutdown() {
     brake_now();
 }
 
-void Drivetrain::set_voltage(int32_t front_left, int32_t front_right, int32_t back_right, int32_t back_left) {
-    front_left_voltage = std::clamp(front_left, INT32_C(-12000), INT32_C(12000));
-    front_right_voltage = std::clamp(front_right, INT32_C(-12000), INT32_C(12000));
-    back_right_voltage = std::clamp(back_right, INT32_C(-12000), INT32_C(12000));
-    back_left_voltage = std::clamp(back_left, INT32_C(-12000), INT32_C(12000));
+void Drivetrain::set_voltage(int32_t left_mV, int32_t right_mV) {
+    left_drive_voltage = std::clamp(left_mV, INT32_C(-12000), INT32_C(12000));
+    right_drive_voltage = std::clamp(right_mV, INT32_C(-12000), INT32_C(12000));
 
     drive_type = Constants::DriveType::VOLTAGE;
 }
 
-void Drivetrain::set_drive_power(int32_t front_left, int32_t front_right, int32_t back_right, int32_t back_left) {
-    front_left_power = std::clamp(front_left, INT32_C(-127), INT32_C(127));
-    front_right_power = std::clamp(front_right, INT32_C(-127), INT32_C(127));
-    back_right_power = std::clamp(back_right, INT32_C(-127), INT32_C(127));
-    back_left_power = std::clamp(back_left, INT32_C(-127), INT32_C(127));
+void Drivetrain::set_drive_power(int32_t left, int32_t right) {
+    left_drive_power = std::clamp(left, INT32_C(-127), INT32_C(127));
+    right_drive_power = std::clamp(right, INT32_C(-127), INT32_C(127));
 
     drive_type = Constants::DriveType::POWER;
 }
 
-void Drivetrain::set_velocity(double front_left, double front_right, double back_right, double back_left) {
+void Drivetrain::set_velocity(double target_left, double target_right) {
     // Get current velocities from the motors
-    const std::vector<double> front_left_vel = front_left_motors.get_actual_velocity_all();
-    const std::vector<double> front_right_vel = front_right_motors.get_actual_velocity_all();
-    const std::vector<double> back_right_vel = back_right_motors.get_actual_velocity_all();
-    const std::vector<double> back_left_vel = back_left_motors.get_actual_velocity_all();
+    const std::vector<double> left_vel = left_motors.get_actual_velocity_all();
+    const std::vector<double> right_vel = right_motors.get_actual_velocity_all();
 
     // Add all left/right motors together and divide by count to get average velocity
-    const double left_front_avg = Utils::rpm_to_ips(std::reduce(front_left_vel.begin(),
-    front_left_vel.end(), 0.0) / front_left_vel.size());
-    const double right_front_avg = Utils::rpm_to_ips(std::reduce(front_right_vel.begin(),
-    front_right_vel.end(), 0.0) / front_right_vel.size());
-    const double back_right_avg = Utils::rpm_to_ips(std::reduce(back_right_vel.begin(),
-    back_right_vel.end(), 0.0) / back_right_vel.size());
-    const double back_left_avg = Utils::rpm_to_ips(std::reduce(back_left_vel.begin(),
-    back_left_vel.end(), 0.0) / back_left_vel.size());
+    const double left_avg_vel = Utils::rpm_to_ips(std::reduce(left_vel.begin(),
+    left_vel.end(), 0.0) / left_vel.size());
+    const double right_avg_vel = Utils::rpm_to_ips(std::reduce(right_vel.begin(),
+    right_vel.end(), 0.0) / right_vel.size());
 
     // Calculate current error
-    const double front_left_error = front_left - left_front_avg;
-    const double front_right_error = front_right - right_front_avg;
-    const double back_right_error = back_right - back_right_avg;
-    const double back_left_error = back_left - back_left_avg;
+
+    const double left_error = target_left - left_avg_vel;
+    const double right_error = target_right - right_avg_vel;
 
     // Calculate new voltages to set
-    const int32_t front_left_voltage = static_cast<int32_t>(front_left_velocity_pid.calculate(front_left_error));
-    const int32_t front_right_voltage = static_cast<int32_t>(front_right_velocity_pid.calculate(front_right_error));
-    const int32_t back_right_voltage = static_cast<int32_t>(back_right_velocity_pid.calculate(back_right_error));
-    const int32_t back_left_voltage = static_cast<int32_t>(back_left_velocity_pid.calculate(back_left_error));
+    const auto front_left_voltage = static_cast<int32_t>(left_velocity_pid.calculate(left_error));
+    const auto front_right_voltage = static_cast<int32_t>(right_velocity_pid.calculate(right_error));
 
     // Set the new voltages
-    set_voltage(front_left_voltage, front_right_voltage, back_right_voltage, back_left_voltage);
+    set_voltage(front_left_voltage, front_right_voltage);
 }
 
 bool Drivetrain::set_braking(const bool braking) {
@@ -198,27 +165,18 @@ bool Drivetrain::set_braking(const bool braking) {
 }
 
 void Drivetrain::brake_now() {
-    front_left_motors.set_brake_mode_all(pros::E_MOTOR_BRAKE_BRAKE);
-    front_right_motors.set_brake_mode_all(pros::E_MOTOR_BRAKE_BRAKE);
-    back_right_motors.set_brake_mode_all(pros::E_MOTOR_BRAKE_BRAKE);
-    back_left_motors.set_brake_mode_all(pros::E_MOTOR_BRAKE_BRAKE);
+    left_motors.set_brake_mode_all(pros::E_MOTOR_BRAKE_BRAKE);
+    right_motors.set_brake_mode_all(pros::E_MOTOR_BRAKE_BRAKE);
 
     // Clear old velocities
-    front_left_power = 0;
-    front_right_power = 0;
-    back_right_power = 0;
-    back_left_power = 0;
-
-    front_left_voltage = 0;
-    front_right_voltage = 0;
-    back_right_voltage = 0;
-    back_left_voltage = 0;
+    left_drive_power = 0;
+    right_drive_power = 0;
+    left_drive_voltage = 0;
+    right_drive_voltage = 0;
 
     // set braking
-    front_left_motors.brake();
-    front_right_motors.brake();
-    back_right_motors.brake();
-    back_left_motors.brake();
+    left_motors.brake();
+    right_motors.brake();
 }
 
 bool Drivetrain::set_reversing(const bool reversing) {

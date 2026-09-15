@@ -25,33 +25,25 @@ public:
     void shutdown() override;
 
     /**
-     * Set the voltage (in milli-volts) of the motors.
-     * Input values are clamped to the range [-12000,12000]
-     * @param front_left The voltage to set the front left motors to.
-     * @param front_right The voltage to set the front right motors to.
-     * @param back_right The voltage to set the back right motors to.
-     * @param back_left The voltage to set the back left motors to.
-     */
-    void set_voltage(int32_t front_left, int32_t front_right, int32_t back_right, int32_t back_left);
+    * Set the voltage (in milli-volts) of the left and right motors in range [-12000,12000].
+    * @param left_mV The voltage to set the left motors to.
+    * @param right_mV The voltage to set the right motors to.
+    */
+    void set_voltage(int32_t left_mV, int32_t right_mV);
 
     /**
-     * Set the power of the motors.
-     * Input values are clamped to the range [-127, 127]
-     * @param front_left The power to set the front left motors to.
-     * @param front_right The power to set the front right motors to.
-     * @param back_right The power to set the back right motors to.
-     * @param back_left The power to set the back left motors to.
-     */
-    void set_drive_power(int32_t front_left, int32_t front_right, int32_t back_right, int32_t back_left);
+    * Set the power of the left and right motors in range [-127, 127].
+    * @param left The power to set the left motors to.
+    * @param right The power to set the right motors to.
+    */
+    void set_drive_power(int32_t left, int32_t right);
 
     /**
-     * Set the motors to run at a target velocity in inches per second
-     * @param front_left The velocity to set the front left motors to.
-     * @param front_right The velocity to set the front left motors to.
-     * @param back_right The velocity to set the back right motors to.
-     * @param back_left The velocity to set the back left motors to.
-     */
-    void set_velocity(double front_left, double front_right, double back_right, double back_left);
+    * Set the motors to run at a target velocity in inches per second
+    * @param target_left The velocity of the left motors in inches per second
+    * @param target_right The velocity of the right motors in inches per second
+    */
+    void set_velocity(double target_left, double target_right);
 
     /** Sets the robot to be braking. When it is in this state all methods that would usually move the robot will not work. When this method is called the robot is not
      * guaranteed to be braked, it will become braked when the next periodic loop runs if braking is still true.
@@ -100,14 +92,9 @@ public:
 
 private:
     /** Voltage in mV to set motors to. Will be between -12,000 and +12,000. */
-    int32_t front_left_voltage = 0;
+    int32_t left_drive_voltage{};
     /** Voltage in mV to set motors to. Will be between -12,000 and +12,000. */
-    int32_t front_right_voltage = 0;
-    /** Voltage in mV to set motors to. Will be between -12,000 and +12,000. */
-    int32_t back_right_voltage = 0;
-    /** Voltage in mV to set motors to. Will be between -12,000 and +12,000. */
-    int32_t back_left_voltage = 0;
-
+    int32_t right_drive_voltage{};
 
     /** The current braking state of the robot */
     bool braking;
@@ -119,28 +106,16 @@ private:
     OdometryGyro odometry;
 
     /** Power to set motors to from analog sticks. Will be between [-127, 127] */
-    int32_t front_left_power = 0;
+    int32_t left_drive_power{};
     /** Power to set motors to from analog sticks. Will be between [-127, 127] */
-    int32_t front_right_power = 0;
-    /** Power to set motors to from analog sticks. Will be between [-127, 127] */
-    int32_t back_right_power = 0;
-    /** Power to set motors to from analog sticks. Will be between [-127, 127] */
-    int32_t back_left_power = 0;
+    int32_t right_drive_power{};
 
-    /** The PID used for front left motors velocity */
-    PID front_left_velocity_pid{Constants::PID::Drive::Velocity::Kp,
+    /** The PID used for the left motors velocity */
+    PID left_velocity_pid{Constants::PID::Drive::Velocity::Kp,
                                 Constants::PID::Drive::Velocity::Kd,
                                 Constants::PID::Drive::Velocity::Ki};
-    /** The PID used for front right motors velocity */
-    PID front_right_velocity_pid{Constants::PID::Drive::Velocity::Kp,
-                                 Constants::PID::Drive::Velocity::Kd,
-                                 Constants::PID::Drive::Velocity::Ki};
-    /** The PID used for back right motors velocity */
-    PID back_right_velocity_pid{Constants::PID::Drive::Velocity::Kp,
-                                Constants::PID::Drive::Velocity::Kd,
-                                Constants::PID::Drive::Velocity::Ki};
-    /** The PID used for back left motors velocity */
-    PID back_left_velocity_pid{Constants::PID::Drive::Velocity::Kp,
+    /** The PID used for the right motors velocity */
+    PID right_velocity_pid{Constants::PID::Drive::Velocity::Kp,
                                  Constants::PID::Drive::Velocity::Kd,
                                  Constants::PID::Drive::Velocity::Ki};
 
@@ -156,38 +131,34 @@ private:
 
 
     // Motors:
-    /** The left, front motor closer to the ground. */
+    /** The left, front motor farther from the center. */
     pros::Motor left_front1;
-    /** The left, front motor farther from the ground. */
+    /** The left, front motor closer to the center. */
     pros::Motor left_front2;
 
-    /** The right, front motor closer to the ground. */
+    /** The right, front motor farther from the center. */
     pros::Motor right_front1;
-    /** The right, front motor farther from the ground. */
+    /** The right, front motor closer to the center. */
     pros::Motor right_front2;
 
-    /** The right, back motor closer to the ground. */
+    /** The right, back motor farther from the center. */
     pros::Motor right_back1;
-    /** The right, back motor farther from the ground. */
+    /** The right, back motor closer to the center. */
     pros::Motor right_back2;
 
-    /** The left, back motor closer to the ground. */
+    /** The left, back motor farther from the center. */
     pros::Motor left_back1;
-    /** The left, back motor farther from the ground. */
+    /** The left, back motor closer to the center. */
     pros::Motor left_back2;
 
 
 
 
     // Motor groups:
-    /** Group of all the motors on the front left of the robot. */
-    pros::MotorGroup front_left_motors;
-    /** Group of all the motors on the front right of the robot. */
-    pros::MotorGroup front_right_motors;
-    /** Group of all the motors on the bakc right of the robot. */
-    pros::MotorGroup back_right_motors;
-    /** Group of all the motors on the back left of the robot. */
-    pros::MotorGroup back_left_motors;
+    /** Group of all the motors on the left of the robot. */
+    pros::MotorGroup left_motors;
+    /** Group of all the motors on the right of the robot. */
+    pros::MotorGroup right_motors;
 
     // Rotation sensors:
     /** Smart pointer to the left rotation sensor. */
