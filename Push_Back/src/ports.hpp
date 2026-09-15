@@ -70,5 +70,10 @@ namespace Ports {
 
     inline constexpr std::uint8_t LIFT_PISTON_PORT = 'B';
 
+    /** Port for sending data to the auxiliary device. */
+    inline constexpr std::uint8_t AUX_TX_PORT = 4;
+    /** Port for receiving data from the auxiliary device. */
+    inline constexpr std::uint8_t AUX_RX_PORT = 5;
+
     #endif
 }
