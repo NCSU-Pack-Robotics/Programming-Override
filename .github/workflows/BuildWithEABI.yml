@@ -1,0 +1,49 @@
+name: Build EABI
+run-name: Builds using the embedded abi
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    env:
+      XPACK_ARM_GCC_VERSION: "14.2.1-1.1"
+    strategy:
+      matrix:
+        config:
+          - name: think
+            THINK_ON: true
+            DO_ON: false
+          - name: do
+            THINK_ON: false
+            DO_ON: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Install ARM GCC
+        run: |
+            set -eux
+            mkdir -p "$HOME/.local"
+            cd "$HOME/.local"
+            curl -L -o armgcc.tar.gz \
+            "https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v${XPACK_ARM_GCC_VERSION}/xpack-arm-none-eabi-gcc-${XPACK_ARM_GCC_VERSION}-linux-x64.tar.gz"
+            mkdir -p "arm-none-eabi-gcc-${XPACK_ARM_GCC_VERSION}"
+            tar -xzf armgcc.tar.gz -C "arm-none-eabi-gcc-${XPACK_ARM_GCC_VERSION}" --strip-components=1
+            rm -f armgcc.tar.gz
+            # Add to path
+            echo "$HOME/.local/arm-none-eabi-gcc-${XPACK_ARM_GCC_VERSION}/bin" >> "$GITHUB_PATH"
+
+      - name: Verify ARM GCC
+        run: arm-none-eabi-g++ --version
+
+      - name: Setup cmake
+        run: cmake -S . -B build -DTESTING=0 -DBRAIN=1 -DPI=0 -DTHINK=${{ matrix.config.THINK_ON }} -DDO=${{ matrix.config.DO_ON }} -DCMAKE_TOOLCHAIN_FILE=toolchain-arm-none-eabi.cmake
+
+      - name: Build
+        run: cmake --build build --target Build

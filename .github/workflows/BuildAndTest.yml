@@ -1,0 +1,36 @@
+name: Build and GTest
+run-name: Builds using normal gcc and runs gtest unit tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    env:
+      XPACK_ARM_GCC_VERSION: "14.2.1-1.1"
+    strategy:
+      matrix:
+        config:
+          - name: think
+            THINK_ON: true
+            DO_ON: false
+          - name: do
+            THINK_ON: false
+            DO_ON: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+            submodules: 'recursive'
+
+      - name: Setup cmake
+        run: cmake -S . -B build -DTESTING=1 -DBRAIN=1 -DPI=0 -DTHINK=${{ matrix.config.THINK_ON }} -DDO=${{ matrix.config.DO_ON }}
+
+      - name: Build
+        run: cmake --build build --target TestSuite_Programming_Push_Back
+
+      - name: Run GTest
+        run: ./build/Push_Back/test/TestSuite_Programming_Push_Back
