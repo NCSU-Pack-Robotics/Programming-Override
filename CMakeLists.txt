@@ -301,11 +301,75 @@ endif ()
 
 if (NOT TESTING)
 
+# Embed every file in Push_Back/static/ into the firmware.
+set(ASSET_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/Push_Back")
+set(ASSET_SOURCE_DIR "${ASSET_ROOT}/static")
+
+# Find all assets recursively.
+file(GLOB_RECURSE ASSET_FILES
+        CONFIGURE_DEPENDS
+        LIST_DIRECTORIES false
+        "${ASSET_SOURCE_DIR}/*"
+)
+
+set(ASSET_OBJECTS "")
+
+foreach(ASSET_FILE IN LISTS ASSET_FILES)
+
+    # Get the path relative to Push_Back.
+    # Example: static/test.txt
+    file(RELATIVE_PATH ASSET_RELATIVE
+            "${ASSET_ROOT}"
+            "${ASSET_FILE}"
+    )
+
+    # Preserve the relative path to avoid object-file name collisions.
+    # Example: build/assets/static/test.txt.o
+    set(ASSET_OBJECT
+            "${CMAKE_CURRENT_BINARY_DIR}/assets/${ASSET_RELATIVE}.o"
+    )
+
+    get_filename_component(ASSET_OBJECT_DIR
+            "${ASSET_OBJECT}"
+            DIRECTORY
+    )
+
+    add_custom_command(
+            OUTPUT "${ASSET_OBJECT}"
+
+            COMMAND ${CMAKE_COMMAND} -E make_directory
+            "${ASSET_OBJECT_DIR}"
+
+            COMMAND "${CMAKE_OBJCOPY}"
+            -I binary
+            -O elf32-littlearm
+            -B arm
+            --rename-section
+            .data=.rodata,alloc,load,readonly,data,contents
+            "${ASSET_RELATIVE}"
+            "${ASSET_OBJECT}"
+
+            WORKING_DIRECTORY "${ASSET_ROOT}"
+
+            DEPENDS "${ASSET_FILE}"
+
+            COMMENT "Embedding ${ASSET_RELATIVE}"
+
+            VERBATIM
+    )
+
+    list(APPEND ASSET_OBJECTS "${ASSET_OBJECT}")
+
+endforeach()
+
+message(STATUS "Assets to embed: ${ASSET_FILES}")
+
 # Hot Package
 add_executable(hot.package.elf
         ${SRC_FILES}
         ${TOP_LEVEL_INCLUDE}
         ${TIMESTAMP_SRC}
+        ${ASSET_OBJECTS}
 )
 
 add_dependencies(hot.package.elf
