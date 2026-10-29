@@ -33,10 +33,10 @@ Drivetrain::Drivetrain() :
 
     right_motors({right_front1.get_port(), right_front2.get_port(), right_back1.get_port(), right_back2.get_port()},
                 right_front1.get_gearing(),
-                right_front1.get_encoder_units())
+                right_front1.get_encoder_units()),
 
-    // left_rotation_sensor(Ports::LEFT_ROTATION_SENSOR_PORT),
-    // right_rotation_sensor(Ports::RIGHT_ROTATION_SENSOR_PORT),
+    left_rotation_sensor(Ports::LEFT_ROTATION_SENSOR_PORT),
+    right_rotation_sensor(Ports::RIGHT_ROTATION_SENSOR_PORT)
 
     // gyro(Ports::GYRO_PORT)
 {
@@ -51,11 +51,10 @@ void Drivetrain::initialize() {
     left_motors.tare_position_all();
     right_motors.tare_position_all();
 
-    // TODO: Change these when odom pods are added
-    // left_rotation_sensor.reset();
-    // right_rotation_sensor.reset();
-    // left_rotation_sensor.reset_position();
-    // right_rotation_sensor.reset_position();
+    left_rotation_sensor.reset();
+    right_rotation_sensor.reset();
+    left_rotation_sensor.reset_position();
+    right_rotation_sensor.reset_position();
 
     // TODO: Change when gyro is added
     // Calibrate the gryo
@@ -70,7 +69,7 @@ void Drivetrain::initialize() {
 void Drivetrain::periodic() {
     // Calculate the pose of the robot
     // const double heading = -this->gyro.get_rotation() * M_PI / 180;
-    // this->odometry.calculate(this->get_position(), heading);
+    this->odometry.calculate(this->get_position());
 
     if (braking) {
         brake_now();
@@ -110,7 +109,7 @@ void Drivetrain::disabled_periodic() {
 
     // In case robot is moved when disabled
     // const double heading = -this->gyro.get_rotation()  * M_PI / 180;
-    // this->odometry.calculate(this->get_position(), heading);
+    this->odometry.calculate(this->get_position());
 }
 
 void Drivetrain::shutdown() {
@@ -191,21 +190,24 @@ bool Drivetrain::set_reversing(const bool reversing) {
 }
 
 // TODO: Figure out when odom hardware is available
-// std::pair<double, double> Drivetrain::get_position(const bool respect_reverse) const {
-//     // Get the positions of the drivetrain in degrees - https://www.vexforum.com/t/get-angle-vs-get-position-pros/115915
-//     double left_position  = left_rotation_sensor.get_position() / 100.0;
-//     double right_position = right_rotation_sensor.get_position() / 100.0;
-//
-//     // Reverse values if we are in reverse mode
-//     if (respect_reverse && reversing) {
-//         left_position = -left_position;
-//         right_position = -right_position;
-//
-//         return {right_position, left_position};
-//     }
-//
-//     return {left_position, right_position};
-// }
+std::pair<double, double> Drivetrain::get_position(const bool respect_reverse) const {
+    // Get the positions of the drivetrain in degrees - https://www.vexforum.com/t/get-angle-vs-get-position-pros/115915
+    double left_position  = left_rotation_sensor.get_position() / 100.0;
+    double right_position = right_rotation_sensor.get_position() / 100.0;
+
+    // printf("Left pos: %lf\n", left_position);
+    // printf("Right pos: %lf\n\n", right_position);
+
+    // Reverse values if we are in reverse mode
+    if (respect_reverse && reversing) {
+        left_position = -left_position;
+        right_position = -right_position;
+
+        return {right_position, left_position};
+    }
+
+    return {left_position, right_position};
+}
 
 Pose Drivetrain::get_pose() const {
     Pose pose = this->odometry.get_pose();

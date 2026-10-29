@@ -74,7 +74,7 @@ public:
      * @return A pair of the left and right motor positions in degrees. The first value is the left
      * motor position, and the second value is the right motor position.
      */
-    // std::pair<double, double> get_position(bool respect_reverse=false) const;
+    std::pair<double, double> get_position(bool respect_reverse=false) const;
 
     /**
     * Get the pose of the robot.
@@ -103,7 +103,7 @@ private:
     /** The direction the robot is moving in. 1 for forward, -1 for reverse */
     int direction;
 
-    OdometryGyro odometry;
+    OdometryArc odometry;
 
     /** Power to set motors to from analog sticks. Will be between [-127, 127] */
     int32_t left_drive_power{};
@@ -162,9 +162,9 @@ private:
 
     // Rotation sensors:
     /** Smart pointer to the left rotation sensor. */
-    // pros::Rotation left_rotation_sensor;
+    pros::Rotation left_rotation_sensor;
     /** Smart pointer to the right rotation sensor. */
-    // pros::Rotation right_rotation_sensor;
+    pros::Rotation right_rotation_sensor;
 
     // Gyro:
     /** Smart pointer to the gyro sensor. */

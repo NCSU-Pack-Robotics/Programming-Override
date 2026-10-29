@@ -119,11 +119,11 @@ namespace Constants {
 
         #elif DO
         /** The initial x position of the robot */
-        constexpr double INITIAL_X = 117.79;  // 120.375;
+        constexpr double INITIAL_X = 0.0;  // 120.375;
         /** The initial y position of the robot */
-        constexpr double INITIAL_Y = 89.37; // 130.72;
+        constexpr double INITIAL_Y = 0.0; // 130.72;
         /** The initial heading of the robot, needs to be PI if the robot starts reversed. */
-        constexpr double INITIAL_HEADING = 2.6668631;  // 3.275284874;
+        constexpr double INITIAL_HEADING = 0.0;  // 3.275284874;
 
         #endif
 

@@ -36,7 +36,7 @@ namespace Constants {
          *     • Measured between the centers of the outer wheels
          *     • Measured in inches
         */
-        constexpr double ROBOT_DIAMETER = 11.18;
+        constexpr double ROBOT_DIAMETER = 7.6;
 
         /**
          * Half the distance between the centers of each tracking wheel
