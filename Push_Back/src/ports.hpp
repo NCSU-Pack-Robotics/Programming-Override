@@ -43,22 +43,25 @@ namespace Ports {
     #elif DO
 
     /** Port of the left first front motor */
-    inline constexpr std::int8_t LEFT_FRONT1_MOTOR_PORT = 10; // 1 is the wheel farther from the center, 2 is closer
+    inline constexpr std::int8_t LEFT_FRONT1_MOTOR_PORT = 17; // 1 is the wheel farther from the center, 2 is closer
     /** Port of the left second front motor */
-    inline constexpr std::int8_t LEFT_FRONT2_MOTOR_PORT = -9;
+    inline constexpr std::int8_t LEFT_FRONT2_MOTOR_PORT = -14;
     /** Port of the left second back motor */
-    inline constexpr std::int8_t LEFT_BACK2_MOTOR_PORT = 8;
+    inline constexpr std::int8_t LEFT_BACK2_MOTOR_PORT = 16;
     /** Port of the left first back motor */
-    inline constexpr std::int8_t LEFT_BACK1_MOTOR_PORT = -7;
+    inline constexpr std::int8_t LEFT_BACK1_MOTOR_PORT = -15;
 
     /** Port of the right first front motor */
-    inline constexpr std::int8_t RIGHT_FRONT1_MOTOR_PORT = -13;
+    inline constexpr std::int8_t RIGHT_FRONT1_MOTOR_PORT = -18;
     /** Port of the right second front motor */
-    inline constexpr std::int8_t RIGHT_FRONT2_MOTOR_PORT = 14;
+    inline constexpr std::int8_t RIGHT_FRONT2_MOTOR_PORT = 8;
     /** Port of the right second back motor */
-    inline constexpr std::int8_t RIGHT_BACK2_MOTOR_PORT = -15;
+    inline constexpr std::int8_t RIGHT_BACK2_MOTOR_PORT = -13;
     /** Port of the right first back motor */
-    inline constexpr std::int8_t RIGHT_BACK1_MOTOR_PORT = 16;
+    inline constexpr std::int8_t RIGHT_BACK1_MOTOR_PORT = -5;
+
+    inline constexpr std::int8_t LEFT_ROTATION_SENSOR_PORT = 12;
+    inline constexpr std::int8_t RIGHT_ROTATION_SENSOR_PORT = 10;
 
 
     /** Port of the bottom intake motor */
